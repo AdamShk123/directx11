@@ -4,4 +4,8 @@
 #include <fmt/core.h>
 #include <iostream>
 
+#include <SDL2/SDL.h>
+
+#include <d3d11.h>
+
 #endif // DIRECTX11_HPP
