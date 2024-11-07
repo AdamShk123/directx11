@@ -1,5 +1,7 @@
 ﻿#include "./directx11.hpp"
 
+using namespace DirectX::SimpleMath;
+
 int main(int argc, char* argv[])
 {
     fmt::println("Hello World!");
@@ -21,6 +23,9 @@ int main(int argc, char* argv[])
         600, 
         windowFlags
     );
+
+    Vector3 vec { 0.0f, 0.0f, 0.0f };
+    fmt::println("vec: {}", vec.x);
 
     ID3D11Device* device = nullptr;
         

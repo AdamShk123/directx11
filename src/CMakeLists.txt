@@ -1,5 +1,6 @@
 ﻿find_package(fmt CONFIG REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
+find_package(directxtk CONFIG REQUIRED)
 
 add_executable (${PROJECT_NAME} "directx11.cpp" "directx11.hpp")
 
@@ -8,6 +9,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 	SDL2::SDL2main
 	SDL2::SDL2
 	d3d11
+	Microsoft::DirectXTK
 )
 
 if(MSVC)

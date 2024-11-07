@@ -8,4 +8,6 @@
 
 #include <d3d11.h>
 
+#include <directxtk/SimpleMath.h>
+
 #endif // DIRECTX11_HPP
