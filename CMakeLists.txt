@@ -1,4 +1,4 @@
-﻿cmake_minimum_required (VERSION 3.25)
+﻿cmake_minimum_required (VERSION 3.29)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
@@ -8,7 +8,7 @@ endif()
 
 project ("directx11")
 
-set(CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 # Include sub-projects.
