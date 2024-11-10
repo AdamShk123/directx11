@@ -1,6 +1,8 @@
 ﻿find_package(SDL2 CONFIG REQUIRED)
 find_package(directxtk CONFIG REQUIRED)
 
+file(COPY "vertex.hlsl" "pixel.hlsl" DESTINATION ${CMAKE_BINARY_DIR}/src)
+
 add_executable (${PROJECT_NAME} "directx11.cpp" "game.cpp" "dx.cpp")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 
@@ -8,6 +10,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 	SDL2::SDL2
 	d3d11
 	dxgi
+	d3dcompiler
 	Microsoft::DirectXTK
 )
 
