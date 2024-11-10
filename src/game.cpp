@@ -4,31 +4,32 @@ namespace Game {
 
 Game::Game()
 {
-    IDXGIFactory* factory = nullptr;
 
     createWindow();
-    createFactory(factory);
-    auto bestAdapter = findBestAdapter(factory);
+    createFactory();
+    auto bestAdapter = findBestAdapter();
     createDevice(bestAdapter);
 
     #if defined(_DEBUG)
     DX::ThrowIfFailed(m_device->QueryInterface(IID_PPV_ARGS(&m_debugController)));
     #endif // _DEBUG
 
-    createSwapChain(factory);
-   
-    factory->Release();
+    createSwapChain();
 }
 
 Game::~Game() 
 {
-    m_device->Release();
-    m_deviceContext->Release();
-    m_swapChain->Release();
-    m_renderTargetView->Release();
+    if (m_factory) m_factory->Release();
+    if (m_device) m_device->Release();
+    if (m_deviceContext) m_deviceContext->Release();
+    if (m_swapChain) m_swapChain->Release();
+    if (m_renderTargetView) m_renderTargetView->Release();
+    if (m_backBuffer) m_backBuffer->Release();
+    if (m_vertexBuffer) m_vertexBuffer->Release();
+    if (m_indexBuffer) m_indexBuffer->Release();
 
     #if defined(_DEBUG)
-    m_debugController->Release();
+    if(m_debugController) m_debugController->Release();
     #endif
         
     SDL_DestroyWindow(m_window);
@@ -39,51 +40,19 @@ Game::~Game()
 
 void Game::run() 
 {
-    ID3D11Buffer* vertexBuffer = nullptr;
-
-    D3D11_BUFFER_DESC vertexBufferDesc{};
-    vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    vertexBufferDesc.ByteWidth = sizeof(Vertex) * 3;
-    vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    vertexBufferDesc.CPUAccessFlags = 0;
-    vertexBufferDesc.MiscFlags = 0;
-    vertexBufferDesc.StructureByteStride = 0;
-
-    D3D11_SUBRESOURCE_DATA vertexData{};
-    vertexData.pSysMem = vertexBufferData.data();
-    vertexData.SysMemPitch = 0;
-    vertexData.SysMemSlicePitch = 0;
-
-    auto createVertexBufferResult = m_device->CreateBuffer(
-        &vertexBufferDesc,
-        &vertexData,
-        &vertexBuffer
+    createBuffer(
+        m_vertexBuffer, 
+        D3D11_BIND_VERTEX_BUFFER, 
+        (void*)vertexBufferData.data(),
+        static_cast<unsigned int>(sizeof(Vertex) * vertexBufferData.size())
     );
 
-    DX::ThrowIfFailed(createVertexBufferResult);
-
-    ID3D11Buffer* indexBuffer = nullptr;
-
-    D3D11_BUFFER_DESC indexBufferDesc{};
-    indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    indexBufferDesc.ByteWidth = sizeof(unsigned int) * 3;
-    indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-    indexBufferDesc.CPUAccessFlags = 0;
-    indexBufferDesc.MiscFlags = 0;
-    indexBufferDesc.StructureByteStride = 0;
-
-    D3D11_SUBRESOURCE_DATA indexData{};
-    indexData.pSysMem = indexBufferData.data();
-    indexData.SysMemPitch = 0;
-    indexData.SysMemSlicePitch = 0;
-
-    auto createIndexBufferResult = m_device->CreateBuffer(
-        &indexBufferDesc,
-        &indexData,
-        &indexBuffer
+    createBuffer(
+        m_indexBuffer,
+        D3D11_BIND_INDEX_BUFFER,
+        (void*)indexBufferData.data(),
+        static_cast<unsigned int>(sizeof(unsigned int) * indexBufferData.size())
     );
-
-    DX::ThrowIfFailed(createIndexBufferResult);
 
     ID3D11VertexShader* vertexShader = nullptr;
     ID3DBlob* vertexShaderBlob = nullptr;
@@ -115,7 +84,7 @@ void Game::run()
     }
     catch (DX::com_exception e) 
     {
-        std::println("erorrrrr: {}", (const char*)errors->GetBufferPointer());
+        std::println("erorrrrr: {}", errors->GetBufferPointer());
     }
 
     auto createVertexShaderResult = m_device->CreateVertexShader(
@@ -168,7 +137,7 @@ void Game::run()
     // Create the input layout
     auto createInputLayout = m_device->CreateInputLayout(
         layout.data(), 
-        layout.size(), 
+        static_cast<unsigned int>(layout.size()), 
         vertexShaderBlob->GetBufferPointer(),
         vertexShaderBlob->GetBufferSize(), 
         &vertexLayout
@@ -176,19 +145,13 @@ void Game::run()
 
     DX::ThrowIfFailed(createInputLayout);
 
-    m_deviceContext->IASetInputLayout(vertexLayout);
-
-    // Set vertex buffer
-    UINT stride = sizeof(Vertex);
-    UINT offset = 0;
-    m_deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
-    m_deviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-
-    // Set primitive topology
-    m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-    //vertexBuffer->Release();
-    //indexBuffer->Release();
+    D3D11_VIEWPORT viewport{};
+    viewport.Width = static_cast<float>(SCREEN_WIDTH);
+    viewport.Height = static_cast<float>(SCREEN_HEIGHT);
+    viewport.MinDepth = 0.0f;
+    viewport.MaxDepth = 1.0f;
+    viewport.TopLeftX = 0;
+    viewport.TopLeftY = 0;
 
     SDL_Event e;
     bool quit = false;
@@ -215,13 +178,26 @@ void Game::run()
             }
         }
 
+        m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, nullptr);
+
+        m_deviceContext->RSSetViewports(1, &viewport);
+
         m_deviceContext->ClearRenderTargetView(m_renderTargetView, DirectX::Colors::MidnightBlue);
+
+        m_deviceContext->IASetInputLayout(vertexLayout);
 
         m_deviceContext->VSSetShader(vertexShader, nullptr, 0);
         m_deviceContext->PSSetShader(pixelShader, nullptr, 0);
 
-        m_deviceContext->DrawIndexed(3, 0, 0);
+        unsigned int stride = sizeof(Vertex);
+        unsigned int offset = 0;
+        m_deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
 
+        m_deviceContext->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+        m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+        m_deviceContext->DrawIndexed(3, 0, 0);
 
         m_swapChain->Present(0, 0);
     }
@@ -253,14 +229,14 @@ void Game::createWindow()
     }
 }
 
-void Game::createFactory(IDXGIFactory*& factory)
+void Game::createFactory()
 {
-    auto createFactoryResult = CreateDXGIFactory(IID_PPV_ARGS(&factory));
+    auto createFactoryResult = CreateDXGIFactory(IID_PPV_ARGS(&m_factory));
 
     DX::ThrowIfFailed(createFactoryResult);
 }
 
-IDXGIAdapter* Game::findBestAdapter(IDXGIFactory* factory) noexcept
+IDXGIAdapter* Game::findBestAdapter() noexcept
 {
     IDXGIAdapter* adapter = nullptr;
     IDXGIAdapter* bestAdapter = nullptr;
@@ -271,7 +247,7 @@ IDXGIAdapter* Game::findBestAdapter(IDXGIFactory* factory) noexcept
 
     while(true) 
     {
-        if (FAILED(factory->EnumAdapters(numAdapters, &adapter))) break;
+        if (FAILED(m_factory->EnumAdapters(numAdapters, &adapter))) break;
 
         numAdapters += 1;
 
@@ -338,14 +314,14 @@ void Game::createDevice(IDXGIAdapter* adapter)
     DX::ThrowIfFailed(createDeviceResult);
 }
 
-void Game::createSwapChain(IDXGIFactory* factory)
+void Game::createSwapChain()
 {
-    SDL_SysWMinfo wmInfo;
+    SDL_SysWMinfo wmInfo{};
     SDL_VERSION(&wmInfo.version);
     SDL_GetWindowWMInfo(m_window, &wmInfo);
     HWND hwnd = wmInfo.info.win.window;
 
-    DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
+    DXGI_SWAP_CHAIN_DESC swapChainDesc{};
     swapChainDesc.BufferCount = 1;
     swapChainDesc.BufferDesc.Width = SCREEN_WIDTH;
     swapChainDesc.BufferDesc.Height = SCREEN_HEIGHT;
@@ -358,7 +334,7 @@ void Game::createSwapChain(IDXGIFactory* factory)
     swapChainDesc.SampleDesc.Quality = 0;
     swapChainDesc.Windowed = TRUE;
 
-    auto createSwapChainResult = factory->CreateSwapChain(
+    auto createSwapChainResult = m_factory->CreateSwapChain(
         m_device,
         &swapChainDesc,
         &m_swapChain
@@ -366,27 +342,37 @@ void Game::createSwapChain(IDXGIFactory* factory)
 
     DX::ThrowIfFailed(createSwapChainResult);
 
-    ID3D11Texture2D* backBuffer = nullptr;
-    auto getBufferResult = m_swapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
+    auto getBufferResult = m_swapChain->GetBuffer(0, IID_PPV_ARGS(&m_backBuffer));
 
     DX::ThrowIfFailed(getBufferResult);
 
-    auto createRenderTargetViewResult = m_device->CreateRenderTargetView(backBuffer, nullptr, &m_renderTargetView);
-    backBuffer->Release();
+    auto createRenderTargetViewResult = m_device->CreateRenderTargetView(m_backBuffer, nullptr, &m_renderTargetView);
 
     DX::ThrowIfFailed(createRenderTargetViewResult);
+}
 
-    m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, nullptr);
+void Game::createBuffer(ID3D11Buffer*& buffer, D3D11_BIND_FLAG type, void* start, unsigned int size)
+{
+    D3D11_BUFFER_DESC bufferDesc{};
+    bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    bufferDesc.ByteWidth = size;
+    bufferDesc.BindFlags = type;
+    bufferDesc.CPUAccessFlags = 0;
+    bufferDesc.MiscFlags = 0;
+    bufferDesc.StructureByteStride = 0;
 
-    D3D11_VIEWPORT vp{};
-    vp.Width = static_cast<float>(SCREEN_WIDTH);
-    vp.Height = static_cast<float>(SCREEN_HEIGHT);
-    vp.MinDepth = 0.0f;
-    vp.MaxDepth = 1.0f;
-    vp.TopLeftX = 0;
-    vp.TopLeftY = 0;
+    D3D11_SUBRESOURCE_DATA bufferData{};
+    bufferData.pSysMem = start;
+    bufferData.SysMemPitch = 0;
+    bufferData.SysMemSlicePitch = 0;
 
-    m_deviceContext->RSSetViewports(1, &vp);
+    auto createBufferResult = m_device->CreateBuffer(
+        &bufferDesc,
+        &bufferData,
+        &buffer
+    );
+
+    DX::ThrowIfFailed(createBufferResult);
 }
 
 }

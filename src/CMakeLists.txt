@@ -5,6 +5,8 @@ file(COPY "vertex.hlsl" "pixel.hlsl" DESTINATION ${CMAKE_BINARY_DIR}/src)
 
 add_executable (${PROJECT_NAME} "directx11.cpp" "game.cpp" "dx.cpp")
 
+target_include_directories(${PROJECT_NAME} PRIVATE "directx11.hpp" "game.hpp" "dx.hpp")
+
 target_link_libraries(${PROJECT_NAME} PRIVATE 
 	SDL2::SDL2main
 	SDL2::SDL2
@@ -15,7 +17,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 )
 
 if(MSVC)
-  target_compile_options(${PROJECT_NAME} PRIVATE /W4)
+  target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
 else()
   target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()

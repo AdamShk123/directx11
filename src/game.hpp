@@ -48,18 +48,23 @@ public:
 private:
 
 	void createWindow();
-	void createFactory(IDXGIFactory*& factory);
-	IDXGIAdapter* findBestAdapter(IDXGIFactory* factory) noexcept;
+	void createFactory();
+	IDXGIAdapter* findBestAdapter() noexcept;
 	void createDevice(IDXGIAdapter* adapter);
-	void createSwapChain(IDXGIFactory* factory);
+	void createSwapChain();
+	void createBuffer(ID3D11Buffer*& buffer, D3D11_BIND_FLAG type, void* start, unsigned int size);
 
 	SDL_Window* m_window = nullptr;
 
+	IDXGIFactory* m_factory = nullptr;
 	ID3D11Device* m_device = nullptr;
 	ID3D11DeviceContext* m_deviceContext = nullptr;
 	ID3D11Debug* m_debugController = nullptr;
 	IDXGISwapChain* m_swapChain = nullptr;
 	ID3D11RenderTargetView* m_renderTargetView = nullptr;
+	ID3D11Texture2D* m_backBuffer = nullptr;
+	ID3D11Buffer* m_vertexBuffer = nullptr;
+	ID3D11Buffer* m_indexBuffer = nullptr;
 };
 
 }
