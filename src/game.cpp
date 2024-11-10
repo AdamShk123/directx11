@@ -15,6 +15,39 @@ Game::Game()
     #endif // _DEBUG
 
     createSwapChain();
+    createRenderViewTarget();
+
+    createBuffer(
+        m_vertexBuffer,
+        D3D11_BIND_VERTEX_BUFFER,
+        (void*)vertexBufferData.data(),
+        static_cast<unsigned int>(sizeof(Vertex) * vertexBufferData.size())
+    );
+
+    createBuffer(
+        m_indexBuffer,
+        D3D11_BIND_INDEX_BUFFER,
+        (void*)indexBufferData.data(),
+        static_cast<unsigned int>(sizeof(unsigned int) * indexBufferData.size())
+    );
+
+    #if defined(_DEBUG)
+    unsigned int compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+    #else
+    unsigned int compileFlags = 0;
+    #endif
+
+    std::wstring vertexShaderPath{ L"./vertex.hlsl" };
+
+    compileShader(SHADER_TYPE::VERTEX_SHADER, vertexShaderPath, compileFlags);
+
+    createInputLayout();
+
+    std::wstring pixelShaderPath{ L"./pixel.hlsl" };
+
+    compileShader(SHADER_TYPE::PIXEL_SHADER, pixelShaderPath, compileFlags);
+
+    createRasterizerState();
 }
 
 Game::~Game() 
@@ -27,6 +60,12 @@ Game::~Game()
     if (m_backBuffer) m_backBuffer->Release();
     if (m_vertexBuffer) m_vertexBuffer->Release();
     if (m_indexBuffer) m_indexBuffer->Release();
+    if (m_rasterState) m_rasterState->Release();
+    if (m_vertexShader) m_vertexShader->Release();
+    if (m_pixelShader) m_pixelShader->Release();
+    if (m_shaderBlob) m_shaderBlob->Release();
+    if (m_shaderErrors) m_shaderErrors->Release();
+    if (m_vertexLayout) m_vertexLayout->Release();
 
     #if defined(_DEBUG)
     if(m_debugController) m_debugController->Release();
@@ -40,126 +79,6 @@ Game::~Game()
 
 void Game::run() 
 {
-    createBuffer(
-        m_vertexBuffer, 
-        D3D11_BIND_VERTEX_BUFFER, 
-        (void*)vertexBufferData.data(),
-        static_cast<unsigned int>(sizeof(Vertex) * vertexBufferData.size())
-    );
-
-    createBuffer(
-        m_indexBuffer,
-        D3D11_BIND_INDEX_BUFFER,
-        (void*)indexBufferData.data(),
-        static_cast<unsigned int>(sizeof(unsigned int) * indexBufferData.size())
-    );
-
-    ID3D11VertexShader* vertexShader = nullptr;
-    ID3DBlob* vertexShaderBlob = nullptr;
-    ID3DBlob* errors = nullptr;
-
-    #if defined(_DEBUG)
-    UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-    #else
-    UINT compileFlags = 0;
-    #endif
-
-    std::wstring vertPath{ L"./vertex.hlsl" };
-
-    auto compileVertexShaderResult = D3DCompileFromFile(
-        vertPath.c_str(), 
-        nullptr, 
-        nullptr, 
-        "main",
-        "vs_5_0", 
-        compileFlags, 
-        0, 
-        &vertexShaderBlob,
-        &errors
-    );
-
-    try 
-    {
-        DX::ThrowIfFailed(compileVertexShaderResult);
-    }
-    catch (DX::com_exception e) 
-    {
-        std::println("erorrrrr: {}", errors->GetBufferPointer());
-    }
-
-    auto createVertexShaderResult = m_device->CreateVertexShader(
-        vertexShaderBlob->GetBufferPointer(),
-        vertexShaderBlob->GetBufferSize(),
-        nullptr,
-        &vertexShader
-    );
-
-    DX::ThrowIfFailed(createVertexShaderResult);
-
-    ID3D11PixelShader* pixelShader = nullptr;
-    ID3DBlob* pixelShaderBlob = nullptr;
-    //ID3DBlob* errors = nullptr;
-
-    std::wstring pixPath{ L"./pixel.hlsl" };
-
-    auto compilePixelShaderResult = D3DCompileFromFile(
-        pixPath.c_str(),
-        nullptr,
-        nullptr,
-        "main",
-        "ps_5_0",
-        compileFlags,
-        0,
-        &pixelShaderBlob,
-        &errors
-    );
-
-    DX::ThrowIfFailed(compilePixelShaderResult);
-
-    auto createPixelShaderResult = m_device->CreatePixelShader(
-        pixelShaderBlob->GetBufferPointer(),
-        pixelShaderBlob->GetBufferSize(),
-        nullptr,
-        &pixelShader
-    );
-
-    DX::ThrowIfFailed(createPixelShaderResult);
-
-    ID3D11InputLayout* vertexLayout = nullptr;
-
-    // Define the input layout
-    std::array<D3D11_INPUT_ELEMENT_DESC,2> layout 
-    {{
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
-    }};
-
-    // Create the input layout
-    auto createInputLayout = m_device->CreateInputLayout(
-        layout.data(), 
-        static_cast<unsigned int>(layout.size()), 
-        vertexShaderBlob->GetBufferPointer(),
-        vertexShaderBlob->GetBufferSize(), 
-        &vertexLayout
-    );
-
-    DX::ThrowIfFailed(createInputLayout);
-
-    D3D11_RASTERIZER_DESC rasterDesc{};
-    rasterDesc.AntialiasedLineEnable = false;
-    rasterDesc.CullMode = D3D11_CULL_NONE;
-    rasterDesc.DepthBias = 0;
-    rasterDesc.DepthBiasClamp = 0.0f;
-    rasterDesc.DepthClipEnable = true;
-    rasterDesc.FillMode = D3D11_FILL_SOLID;
-    rasterDesc.FrontCounterClockwise = false;
-    rasterDesc.MultisampleEnable = false;
-    rasterDesc.ScissorEnable = false;
-    rasterDesc.SlopeScaledDepthBias = 0.0f;
-
-    DX::ThrowIfFailed(m_device->CreateRasterizerState(&rasterDesc, &m_rasterState));
-    m_deviceContext->RSSetState(m_rasterState);
-
     D3D11_VIEWPORT viewport{};
     viewport.Width = static_cast<float>(SCREEN_WIDTH);
     viewport.Height = static_cast<float>(SCREEN_HEIGHT);
@@ -197,12 +116,12 @@ void Game::run()
 
         m_deviceContext->RSSetViewports(1, &viewport);
 
-        m_deviceContext->ClearRenderTargetView(m_renderTargetView, DirectX::Colors::MidnightBlue);
+        m_deviceContext->ClearRenderTargetView(m_renderTargetView, DirectX::Colors::AntiqueWhite);
 
-        m_deviceContext->IASetInputLayout(vertexLayout);
+        m_deviceContext->IASetInputLayout(m_vertexLayout);
 
-        m_deviceContext->VSSetShader(vertexShader, nullptr, 0);
-        m_deviceContext->PSSetShader(pixelShader, nullptr, 0);
+        m_deviceContext->VSSetShader(m_vertexShader, nullptr, 0);
+        m_deviceContext->PSSetShader(m_pixelShader, nullptr, 0);
 
         unsigned int stride = sizeof(Vertex);
         unsigned int offset = 0;
@@ -356,7 +275,10 @@ void Game::createSwapChain()
     );
 
     DX::ThrowIfFailed(createSwapChainResult);
+}
 
+void Game::createRenderViewTarget() 
+{
     auto getBufferResult = m_swapChain->GetBuffer(0, IID_PPV_ARGS(&m_backBuffer));
 
     DX::ThrowIfFailed(getBufferResult);
@@ -388,6 +310,107 @@ void Game::createBuffer(ID3D11Buffer*& buffer, D3D11_BIND_FLAG type, void* start
     );
 
     DX::ThrowIfFailed(createBufferResult);
+}
+
+void Game::compileShader(SHADER_TYPE type, const std::wstring& path, unsigned int compileFlags)
+{
+    auto target = type == SHADER_TYPE::VERTEX_SHADER ? "vs_5_0" : "ps_5_0";
+
+    auto compileShaderResult = D3DCompileFromFile(
+        path.c_str(),
+        nullptr,
+        nullptr,
+        "main",
+        target,
+        compileFlags,
+        0,
+        &m_shaderBlob,
+        &m_shaderErrors
+    );
+
+    try
+    {
+        DX::ThrowIfFailed(compileShaderResult);
+    }
+    catch (DX::com_exception e)
+    {
+        std::println("erorr: {}", m_shaderErrors->GetBufferPointer());
+        throw e;
+    }
+
+    HRESULT createShaderResult{};
+
+    if (type == SHADER_TYPE::VERTEX_SHADER) 
+    {
+        createShaderResult = m_device->CreateVertexShader(
+            m_shaderBlob->GetBufferPointer(),
+            m_shaderBlob->GetBufferSize(),
+            nullptr,
+            &m_vertexShader
+        );
+    }
+    else 
+    {
+        createShaderResult = m_device->CreatePixelShader(
+            m_shaderBlob->GetBufferPointer(),
+            m_shaderBlob->GetBufferSize(),
+            nullptr,
+            &m_pixelShader
+        );
+    }
+
+    DX::ThrowIfFailed(createShaderResult);
+}
+
+void Game::createInputLayout()
+{
+    // Define the input layout
+    std::array<D3D11_INPUT_ELEMENT_DESC, 2> layout{};
+
+    layout[0].SemanticName = "POSITION";
+    layout[0].SemanticIndex = 0;
+    layout[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+    layout[0].InputSlot = 0;
+    layout[0].AlignedByteOffset = 0;
+    layout[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+    layout[0].InstanceDataStepRate = 0;
+
+    layout[1].SemanticName = "COLOR";
+    layout[1].SemanticIndex = 0;
+    layout[1].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+    layout[1].InputSlot = 0;
+    layout[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+    layout[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+    layout[1].InstanceDataStepRate = 0;
+
+    // Create the input layout
+    auto createInputLayout = m_device->CreateInputLayout(
+        layout.data(),
+        static_cast<unsigned int>(layout.size()),
+        m_shaderBlob->GetBufferPointer(),
+        m_shaderBlob->GetBufferSize(),
+        &m_vertexLayout
+    );
+
+    DX::ThrowIfFailed(createInputLayout);
+}
+
+void Game::createRasterizerState()
+{
+    D3D11_RASTERIZER_DESC rasterDesc{};
+    rasterDesc.AntialiasedLineEnable = false;
+    rasterDesc.CullMode = D3D11_CULL_NONE;
+    rasterDesc.DepthBias = 0;
+    rasterDesc.DepthBiasClamp = 0.0f;
+    rasterDesc.DepthClipEnable = true;
+    rasterDesc.FillMode = D3D11_FILL_SOLID;
+    rasterDesc.FrontCounterClockwise = false;
+    rasterDesc.MultisampleEnable = false;
+    rasterDesc.ScissorEnable = false;
+    rasterDesc.SlopeScaledDepthBias = 0.0f;
+
+    DX::ThrowIfFailed(m_device->CreateRasterizerState(&rasterDesc, &m_rasterState));
+    m_deviceContext->RSSetState(m_rasterState);
 }
 
 }

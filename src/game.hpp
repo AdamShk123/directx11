@@ -24,6 +24,11 @@ namespace Game
 constexpr unsigned int SCREEN_WIDTH = 800;
 constexpr unsigned int SCREEN_HEIGHT = 600;
 
+enum SHADER_TYPE {
+	VERTEX_SHADER = 0,
+	PIXEL_SHADER = 1
+};
+
 struct Vertex
 {
 	std::array<float,3> position;
@@ -31,9 +36,9 @@ struct Vertex
 };
 
 constexpr std::array<Vertex, 3> vertexBufferData{ {
-	{{1.0f, 1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-	{{-1.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-	{{0.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}}
+	{{-1.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+	{{1.0f, -1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+	{{0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}}
 } };
 
 constexpr std::array<unsigned int, 3> indexBufferData{ 0,1,2 };
@@ -52,7 +57,11 @@ private:
 	IDXGIAdapter* findBestAdapter() noexcept;
 	void createDevice(IDXGIAdapter* adapter);
 	void createSwapChain();
+	void createRenderViewTarget();
 	void createBuffer(ID3D11Buffer*& buffer, D3D11_BIND_FLAG type, void* start, unsigned int size);
+	void compileShader(SHADER_TYPE type, const std::wstring& path, unsigned int compileFlags);
+	void createInputLayout();
+	void createRasterizerState();
 
 	SDL_Window* m_window = nullptr;
 
@@ -65,7 +74,12 @@ private:
 	ID3D11Texture2D* m_backBuffer = nullptr;
 	ID3D11Buffer* m_vertexBuffer = nullptr;
 	ID3D11Buffer* m_indexBuffer = nullptr;
-	ID3D11RasterizerState* m_rasterState;
+	ID3D11RasterizerState* m_rasterState = nullptr;
+	ID3D11VertexShader* m_vertexShader = nullptr;
+	ID3D11PixelShader* m_pixelShader = nullptr;
+	ID3DBlob* m_shaderBlob = nullptr;
+	ID3DBlob* m_shaderErrors = nullptr;
+	ID3D11InputLayout* m_vertexLayout = nullptr;
 };
 
 }

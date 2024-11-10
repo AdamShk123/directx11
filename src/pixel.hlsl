@@ -11,7 +11,7 @@ struct PixelOutput
 PixelOutput main(PixelInput pixelInput)
 {
     PixelOutput output;
-    output.attachment0 = float4(1.0f, 1.0f, 1.0f, 1.0f);
+    output.attachment0 = float4(pixelInput.color, 1.0f);
     
     return output;
 }
