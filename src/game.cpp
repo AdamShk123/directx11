@@ -145,6 +145,21 @@ void Game::run()
 
     DX::ThrowIfFailed(createInputLayout);
 
+    D3D11_RASTERIZER_DESC rasterDesc{};
+    rasterDesc.AntialiasedLineEnable = false;
+    rasterDesc.CullMode = D3D11_CULL_NONE;
+    rasterDesc.DepthBias = 0;
+    rasterDesc.DepthBiasClamp = 0.0f;
+    rasterDesc.DepthClipEnable = true;
+    rasterDesc.FillMode = D3D11_FILL_SOLID;
+    rasterDesc.FrontCounterClockwise = false;
+    rasterDesc.MultisampleEnable = false;
+    rasterDesc.ScissorEnable = false;
+    rasterDesc.SlopeScaledDepthBias = 0.0f;
+
+    DX::ThrowIfFailed(m_device->CreateRasterizerState(&rasterDesc, &m_rasterState));
+    m_deviceContext->RSSetState(m_rasterState);
+
     D3D11_VIEWPORT viewport{};
     viewport.Width = static_cast<float>(SCREEN_WIDTH);
     viewport.Height = static_cast<float>(SCREEN_HEIGHT);

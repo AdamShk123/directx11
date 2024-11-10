@@ -65,6 +65,7 @@ private:
 	ID3D11Texture2D* m_backBuffer = nullptr;
 	ID3D11Buffer* m_vertexBuffer = nullptr;
 	ID3D11Buffer* m_indexBuffer = nullptr;
+	ID3D11RasterizerState* m_rasterState;
 };
 
 }
