@@ -14,6 +14,8 @@
 #include <D3DCompiler.h>
 #include <directxcolors.h>
 
+#include <wrl/client.h>
+
 #include <directxtk/SimpleMath.h>
 
 #include "./dx.hpp"
@@ -35,15 +37,38 @@ struct Vertex
 	std::array<float, 3> color;
 };
 
-constexpr std::array<Vertex, 3> vertexBufferData{ {
+typedef DirectX::SimpleMath::Matrix Matrix;
+
+struct Matrices 
+{
+	Matrix projection;
+	Matrix model;
+	Matrix view;
+};
+
+constexpr std::array<Vertex, 6> vertexBufferData{ {
 	{{-1.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
 	{{1.0f, -1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-	{{0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}}
+	{{0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+	{{-1.0f, 0.5f, 1.0f}, {1.0f, 0.0f, 0.0f}},
+	{{-0.5f, 0.5f, 1.0f}, {0.0f, 1.0f, 0.0f}},
+	{{-0.75f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}}
 } };
 
-constexpr std::array<unsigned int, 3> indexBufferData{ 0,1,2 };
+constexpr std::array<unsigned int, 6> indexBufferData{ 
+	0, 1, 2,
+	3, 4, 5
+};
 
-class Game 
+struct Releaser 
+{
+	void operator()(IUnknown* p) 
+	{
+		p->Release();
+	}
+};
+
+class Game
 {
 public:
 	Game();
@@ -71,9 +96,13 @@ private:
 	ID3D11Debug* m_debugController = nullptr;
 	IDXGISwapChain* m_swapChain = nullptr;
 	ID3D11RenderTargetView* m_renderTargetView = nullptr;
+	ID3D11Texture2D* m_depthStencilBuffer = nullptr;
+	ID3D11DepthStencilView* m_depthStencilView = nullptr;
+	ID3D11DepthStencilState* m_depthStencilState = nullptr;
 	ID3D11Texture2D* m_backBuffer = nullptr;
 	ID3D11Buffer* m_vertexBuffer = nullptr;
 	ID3D11Buffer* m_indexBuffer = nullptr;
+	ID3D11Buffer* m_constantBuffer = nullptr;
 	ID3D11RasterizerState* m_rasterState = nullptr;
 	ID3D11VertexShader* m_vertexShader = nullptr;
 	ID3D11PixelShader* m_pixelShader = nullptr;
