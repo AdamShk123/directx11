@@ -1,5 +1,7 @@
 #include "./game.hpp"
 
+using namespace DirectX;
+
 namespace Game {
 
 Game::Game()
@@ -59,12 +61,20 @@ Game::Game()
         static_cast<unsigned int>(sizeof(unsigned int) * indexBufferData.size())
     );
 
-    /*createBuffer(
-        m_constantBuffer,
-        D3D11_BIND_CONSTANT_BUFFER,
+    D3D11_BUFFER_DESC constantBufferDesc{};
+    constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+    constantBufferDesc.ByteWidth = sizeof(ConstantBuffer);
+    constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    constantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    constantBufferDesc.MiscFlags = 0;
+    constantBufferDesc.StructureByteStride = 0;
+
+    auto createConstantBufferResult = m_device->CreateBuffer(
+        &constantBufferDesc,
         nullptr,
-        static_cast<unsigned int>(sizeof(Matrices))
-    );*/
+        &m_constantBuffer
+    );
+    DX::ThrowIfFailed(createConstantBufferResult);
 
     #if defined(_DEBUG)
     unsigned int compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
@@ -122,6 +132,7 @@ Game::~Game()
     if (m_backBuffer) m_backBuffer->Release();
     if (m_vertexBuffer) m_vertexBuffer->Release();
     if (m_indexBuffer) m_indexBuffer->Release();
+    if (m_constantBuffer) m_constantBuffer->Release();
     if (m_rasterState) m_rasterState->Release();
     if (m_vertexShader) m_vertexShader->Release();
     if (m_pixelShader) m_pixelShader->Release();
@@ -155,6 +166,23 @@ void Game::run()
     SDL_Event e;
     bool quit = false;
 
+    ConstantBuffer constantBufferData{};
+
+    constantBufferData.model = SimpleMath::Matrix().CreateTranslation(SimpleMath::Vector3(0.5f, 0.0f, 0.0f));
+    
+    constantBufferData.view = SimpleMath::Matrix::CreateLookAt(
+        SimpleMath::Vector3(0.0f, 0.0f, 2.0f),
+        SimpleMath::Vector3(0.0f, 0.0f, 0.0f),
+        SimpleMath::Vector3(0.0f, 1.0f, 0.0f)
+    );
+
+    constantBufferData.projection = SimpleMath::Matrix::CreatePerspectiveFieldOfView(
+        90.0f,
+        static_cast<float>(SCREEN_WIDTH) / static_cast<float>(SCREEN_HEIGHT),
+        0.1f,
+        100.0f
+    );
+
     while (!quit)
     {
         while (SDL_PollEvent(&e)) {
@@ -177,11 +205,26 @@ void Game::run()
             }
         }
 
+        // Set the position of the constant buffer in the vertex shader.
+        unsigned int bufferNumber = 0;
+        // Lock the constant buffer so it can be written to.
+
+        D3D11_MAPPED_SUBRESOURCE mappedResource{};
+        DX::ThrowIfFailed(m_deviceContext->Map(m_constantBuffer, 0, D3D11_MAP_WRITE_DISCARD,
+            0, &mappedResource));
+        // Get a pointer to the data in the constant buffer.
+        memcpy(mappedResource.pData, &constantBufferData, sizeof(ConstantBuffer));
+        // Unlock the constant buffer.
+        m_deviceContext->Unmap(m_constantBuffer, 0);
+        // Finally set the constant buffer in the vertex shader with the updated
+        // values.
+        m_deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_constantBuffer);
+
         m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, nullptr);
 
         m_deviceContext->RSSetViewports(1, &viewport);
 
-        m_deviceContext->ClearRenderTargetView(m_renderTargetView, DirectX::Colors::AntiqueWhite);
+        m_deviceContext->ClearRenderTargetView(m_renderTargetView, Colors::AntiqueWhite);
 
         // Clear the depth buffer.
         m_deviceContext->ClearDepthStencilView(

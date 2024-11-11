@@ -38,8 +38,9 @@ struct Vertex
 };
 
 typedef DirectX::SimpleMath::Matrix Matrix;
+typedef DirectX::SimpleMath::Vector4 Vector4;
 
-struct Matrices 
+struct ConstantBuffer 
 {
 	Matrix projection;
 	Matrix model;
