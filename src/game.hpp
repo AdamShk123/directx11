@@ -12,7 +12,9 @@
 #include <d3d11.h>
 #include <dxgi.h>
 #include <D3DCompiler.h>
-#include <directxcolors.h>
+
+#include <DirectXColors.h>
+//#include <DirectXMath.h>
 
 #include <wrl/client.h>
 
@@ -33,12 +35,14 @@ enum SHADER_TYPE {
 
 struct Vertex
 {
-	std::array<float,3> position;
+	std::array<float, 3> position;
 	std::array<float, 3> color;
 };
 
 typedef DirectX::SimpleMath::Matrix Matrix;
 typedef DirectX::SimpleMath::Vector4 Vector4;
+typedef DirectX::SimpleMath::Vector3 Vector3;
+typedef DirectX::SimpleMath::Vector2 Vector2;
 
 struct ConstantBuffer 
 {
@@ -46,6 +50,13 @@ struct ConstantBuffer
 	Matrix model;
 	Matrix view;
 };
+
+//struct ConstantBuffer
+//{
+//	DirectX::XMMATRIX proj;
+//	DirectX::XMMATRIX model;
+//	DirectX::XMMATRIX view;
+//};
 
 constexpr std::array<Vertex, 6> vertexBufferData{ {
 	{{-1.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
@@ -59,14 +70,6 @@ constexpr std::array<Vertex, 6> vertexBufferData{ {
 constexpr std::array<unsigned int, 6> indexBufferData{ 
 	0, 1, 2,
 	3, 4, 5
-};
-
-struct Releaser 
-{
-	void operator()(IUnknown* p) 
-	{
-		p->Release();
-	}
 };
 
 class Game
@@ -88,6 +91,10 @@ private:
 	void compileShader(SHADER_TYPE type, const std::wstring& path, unsigned int compileFlags);
 	void createInputLayout();
 	void createRasterizerState();
+	void createDepthStencilBuffer();
+	void createDepthStencilView();
+	void createDepthStencilState();
+	void createConstantBuffer();
 
 	SDL_Window* m_window = nullptr;
 

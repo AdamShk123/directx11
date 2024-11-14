@@ -1,7 +1,8 @@
 {
   "dependencies": [
+    "directxtk",
     "gtest",
     "sdl2",
-    "directxtk"
+    "glm"
   ]
 }
