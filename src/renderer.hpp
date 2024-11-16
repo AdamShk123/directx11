@@ -14,51 +14,19 @@
 #include <D3DCompiler.h>
 
 #include <DirectXColors.h>
-//#include <DirectXMath.h>
 
 #include <wrl/client.h>
 
 #include <directxtk/SimpleMath.h>
 
 #include "./dx.hpp"
+#include "./constants.hpp"
+#include "./window.hpp"
 
-namespace Game 
+namespace Renderer 
 {
 
-constexpr unsigned int SCREEN_WIDTH = 800;
-constexpr unsigned int SCREEN_HEIGHT = 600;
-
-enum SHADER_TYPE {
-	VERTEX_SHADER = 0,
-	PIXEL_SHADER = 1
-};
-
-struct Vertex
-{
-	std::array<float, 3> position;
-	std::array<float, 3> color;
-};
-
-typedef DirectX::SimpleMath::Matrix Matrix;
-typedef DirectX::SimpleMath::Vector4 Vector4;
-typedef DirectX::SimpleMath::Vector3 Vector3;
-typedef DirectX::SimpleMath::Vector2 Vector2;
-
-struct ConstantBuffer 
-{
-	Matrix projection;
-	Matrix model;
-	Matrix view;
-};
-
-//struct ConstantBuffer
-//{
-//	DirectX::XMMATRIX proj;
-//	DirectX::XMMATRIX model;
-//	DirectX::XMMATRIX view;
-//};
-
-constexpr std::array<Vertex, 6> vertexBufferData{ {
+constexpr std::array<Vertex, 6> VERTEX_BUFFER_DATA{ {
 	{{-1.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
 	{{1.0f, -1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
 	{{0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
@@ -67,36 +35,48 @@ constexpr std::array<Vertex, 6> vertexBufferData{ {
 	{{-0.75f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}}
 } };
 
-constexpr std::array<unsigned int, 6> indexBufferData{ 
+constexpr std::array<unsigned int, 6> INDEX_BUFFER_DATA{
 	0, 1, 2,
 	3, 4, 5
 };
 
-class Game
+typedef DirectX::SimpleMath::Matrix Matrix;
+typedef DirectX::SimpleMath::Vector4 Vector4;
+typedef DirectX::SimpleMath::Vector3 Vector3;
+typedef DirectX::SimpleMath::Vector2 Vector2;
+
+struct ConstantBuffer
+{
+	Matrix projection;
+	Matrix model;
+	Matrix view;
+};
+
+class Renderer
 {
 public:
-	Game();
-	~Game();
+	Renderer(const Window& window);
+	~Renderer();
 
 	void run();
 private:
-
-	void createWindow();
 	void createFactory();
 	IDXGIAdapter* findBestAdapter() noexcept;
 	void createDevice(IDXGIAdapter* adapter);
 	void createSwapChain();
 	void createRenderViewTarget();
-	void createBuffer(ID3D11Buffer*& buffer, D3D11_BIND_FLAG type, void* start, unsigned int size);
-	void compileShader(SHADER_TYPE type, const std::wstring& path, unsigned int compileFlags);
+	void createVertexBuffer();
+	void createIndexBuffer();
+	void createConstantBuffer();
+	void compileVertexShader(const std::wstring& path, unsigned int compileFlags);
+	void compilePixelShader(const std::wstring& path, unsigned int compileFlags);
 	void createInputLayout();
 	void createRasterizerState();
 	void createDepthStencilBuffer();
 	void createDepthStencilView();
 	void createDepthStencilState();
-	void createConstantBuffer();
 
-	SDL_Window* m_window = nullptr;
+	Window m_window;
 
 	IDXGIFactory* m_factory = nullptr;
 	ID3D11Device* m_device = nullptr;

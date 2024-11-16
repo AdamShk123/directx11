@@ -1,4 +1,4 @@
-﻿#include "./directx11.hpp"
+﻿#include "./main.hpp"
 
 int main(int argc, char* argv[])
 {
@@ -8,9 +8,12 @@ int main(int argc, char* argv[])
     {
         std::println("Argument[{}]: {}", i, argv[i]);
     }
+
     std::println("Hello World!");
 
-    auto game = Game::Game();
+    auto window = Renderer::Window(CONSTANTS::TITLE.data(), CONSTANTS::SCREEN_WIDTH, CONSTANTS::SCREEN_HEIGHT);
+
+    auto game = Renderer::Renderer(window);
 
     game.run();
 
