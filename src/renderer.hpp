@@ -1,5 +1,5 @@
-#ifndef GAME_HPP
-#define GAME_HPP
+#ifndef RENDERER_HPP
+#define RENDERER_HPP
 
 #include <iostream>
 #include <memory>
@@ -55,10 +55,10 @@ struct ConstantBuffer
 class Renderer
 {
 public:
-	Renderer(const Window& window);
+	Renderer(Window& window);
 	~Renderer();
 
-	void run();
+	void render();
 private:
 	void createFactory();
 	IDXGIAdapter* findBestAdapter() noexcept;
@@ -75,8 +75,9 @@ private:
 	void createDepthStencilBuffer();
 	void createDepthStencilView();
 	void createDepthStencilState();
+	void populateConstantBufferDataStruct();
 
-	Window m_window;
+	Window& m_window;
 
 	IDXGIFactory* m_factory = nullptr;
 	ID3D11Device* m_device = nullptr;
@@ -97,8 +98,10 @@ private:
 	ID3DBlob* m_shaderBlob = nullptr;
 	ID3DBlob* m_shaderErrors = nullptr;
 	ID3D11InputLayout* m_vertexLayout = nullptr;
+
+	ConstantBuffer m_constantBufferData{};
 };
 
 }
 
-#endif // GAME_HPP
+#endif // RENDERER_HPP

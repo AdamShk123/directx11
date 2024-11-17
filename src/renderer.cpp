@@ -5,7 +5,7 @@ using namespace DirectX;
 namespace Renderer 
 {
 
-Renderer::Renderer(const Window& window) : m_window(window)
+Renderer::Renderer(Window& window) : m_window(window)
 {
     createFactory();
     auto bestAdapter = findBestAdapter();
@@ -42,6 +42,8 @@ Renderer::Renderer(const Window& window) : m_window(window)
     compilePixelShader(pixelShaderPath, compileFlags);
 
     createRasterizerState();
+
+    populateConstantBufferDataStruct();
 }
 
 Renderer::~Renderer() 
@@ -70,7 +72,7 @@ Renderer::~Renderer()
     #endif
 }
 
-void Renderer::run() 
+void Renderer::render() 
 {
     D3D11_VIEWPORT viewport{};
     viewport.Width = static_cast<float>(CONSTANTS::SCREEN_WIDTH);
@@ -80,94 +82,51 @@ void Renderer::run()
     viewport.TopLeftX = 0;
     viewport.TopLeftY = 0;
 
-    SDL_Event e;
-    bool quit = false;
+    // Set the position of the constant buffer in the vertex shader.
+    unsigned int bufferNumber = 0;
+    // Lock the constant buffer so it can be written to.
 
-    ConstantBuffer constantBufferData{};
+    D3D11_MAPPED_SUBRESOURCE mappedResource{};
+    DX::ThrowIfFailed(m_deviceContext->Map(m_constantBuffer, 0, D3D11_MAP_WRITE_DISCARD,
+        0, &mappedResource));
+    // Get a pointer to the data in the constant buffer.
+    memcpy(mappedResource.pData, &m_constantBufferData, sizeof(ConstantBuffer));
+    // Unlock the constant buffer.
+    m_deviceContext->Unmap(m_constantBuffer, 0);
+    // Finally set the constant buffer in the vertex shader with the updated
+    // values.
+    m_deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_constantBuffer);
 
-    constantBufferData.model = SimpleMath::Matrix().CreateTranslation(SimpleMath::Vector3(0.5f, 0.0f, 0.0f));
-    
-    constantBufferData.view = SimpleMath::Matrix::CreateLookAt(
-        SimpleMath::Vector3(0.0f, 0.0f, 2.0f),
-        SimpleMath::Vector3(0.0f, 0.0f, 0.0f),
-        SimpleMath::Vector3(0.0f, 1.0f, 0.0f)
+    m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, nullptr);
+
+    m_deviceContext->RSSetViewports(1, &viewport);
+
+    m_deviceContext->ClearRenderTargetView(m_renderTargetView, Colors::AntiqueWhite);
+
+    // Clear the depth buffer.
+    m_deviceContext->ClearDepthStencilView(
+        m_depthStencilView,
+        D3D11_CLEAR_DEPTH,
+        1.0f,
+        0
     );
 
-    constantBufferData.projection = SimpleMath::Matrix::CreatePerspectiveFieldOfView(
-        90.0f,
-        static_cast<float>(CONSTANTS::SCREEN_WIDTH) / static_cast<float>(CONSTANTS::SCREEN_HEIGHT),
-        0.1f,
-        100.0f
-    );
+    m_deviceContext->IASetInputLayout(m_vertexLayout);
 
-    while (!quit)
-    {
-        while (SDL_PollEvent(&e)) {
-            if (e.type == SDL_QUIT) {
-                quit = true;
-            }
-            switch (e.type)
-            {
-            case SDL_QUIT:
-                quit = true;
-                break;
-            case SDL_KEYDOWN:
-                switch (e.key.keysym.sym)
-                {
-                case SDLK_ESCAPE:
-                    quit = true;
-                    break;
-                }
-                break;
-            }
-        }
+    m_deviceContext->VSSetShader(m_vertexShader, nullptr, 0);
+    m_deviceContext->PSSetShader(m_pixelShader, nullptr, 0);
 
-        // Set the position of the constant buffer in the vertex shader.
-        unsigned int bufferNumber = 0;
-        // Lock the constant buffer so it can be written to.
+    unsigned int stride = sizeof(Vertex);
+    unsigned int offset = 0;
+    m_deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
 
-        D3D11_MAPPED_SUBRESOURCE mappedResource{};
-        DX::ThrowIfFailed(m_deviceContext->Map(m_constantBuffer, 0, D3D11_MAP_WRITE_DISCARD,
-            0, &mappedResource));
-        // Get a pointer to the data in the constant buffer.
-        memcpy(mappedResource.pData, &constantBufferData, sizeof(ConstantBuffer));
-        // Unlock the constant buffer.
-        m_deviceContext->Unmap(m_constantBuffer, 0);
-        // Finally set the constant buffer in the vertex shader with the updated
-        // values.
-        m_deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_constantBuffer);
+    m_deviceContext->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
-        m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, nullptr);
+    m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-        m_deviceContext->RSSetViewports(1, &viewport);
+    m_deviceContext->DrawIndexed(static_cast<unsigned int>(INDEX_BUFFER_DATA.size()), 0, 0);
 
-        m_deviceContext->ClearRenderTargetView(m_renderTargetView, Colors::AntiqueWhite);
-
-        // Clear the depth buffer.
-        m_deviceContext->ClearDepthStencilView(
-            m_depthStencilView, 
-            D3D11_CLEAR_DEPTH,
-            1.0f, 
-            0
-        );
-
-        m_deviceContext->IASetInputLayout(m_vertexLayout);
-
-        m_deviceContext->VSSetShader(m_vertexShader, nullptr, 0);
-        m_deviceContext->PSSetShader(m_pixelShader, nullptr, 0);
-
-        unsigned int stride = sizeof(Vertex);
-        unsigned int offset = 0;
-        m_deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
-
-        m_deviceContext->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-
-        m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-        m_deviceContext->DrawIndexed(static_cast<unsigned int>(INDEX_BUFFER_DATA.size()), 0, 0);
-
-        m_swapChain->Present(0, 0);
-    }
+    m_swapChain->Present(0, 0);
 }
 
 void Renderer::createFactory()
@@ -519,6 +478,24 @@ void Renderer::createDepthStencilState()
     DX::ThrowIfFailed(createDepthStencilStateResult);
     // Set the depth stencil state.
     m_deviceContext->OMSetDepthStencilState(m_depthStencilState, 1);
+}
+
+void Renderer::populateConstantBufferDataStruct()
+{
+    m_constantBufferData.model = SimpleMath::Matrix().CreateTranslation(SimpleMath::Vector3(0.5f, 0.0f, 0.0f));
+
+    m_constantBufferData.view = SimpleMath::Matrix::CreateLookAt(
+        SimpleMath::Vector3(0.0f, 0.0f, 2.0f),
+        SimpleMath::Vector3(0.0f, 0.0f, 0.0f),
+        SimpleMath::Vector3(0.0f, 1.0f, 0.0f)
+    );
+
+    m_constantBufferData.projection = SimpleMath::Matrix::CreatePerspectiveFieldOfView(
+        90.0f,
+        static_cast<float>(CONSTANTS::SCREEN_WIDTH) / static_cast<float>(CONSTANTS::SCREEN_HEIGHT),
+        0.1f,
+        100.0f
+    );
 }
 
 void Renderer::createConstantBuffer()

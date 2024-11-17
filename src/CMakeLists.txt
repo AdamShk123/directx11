@@ -8,7 +8,7 @@ endif()
 
 file(COPY "vertex.hlsl" "pixel.hlsl" DESTINATION ${CMAKE_BINARY_DIR}/src)
 
-add_executable (${PROJECT_NAME} "main.cpp" "renderer.cpp" "dx.cpp" "window.cpp")
+add_executable (${PROJECT_NAME} "main.cpp" "renderer.cpp" "dx.cpp" "window.cpp" "game.cpp")
 
 target_include_directories(${PROJECT_NAME} PRIVATE "directx11.hpp" "game.hpp" "dx.hpp")
 

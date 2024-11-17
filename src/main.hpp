@@ -4,5 +4,6 @@
 #include "./constants.hpp"
 #include "./window.hpp"
 #include "./renderer.hpp"
+#include "./game.hpp"
 
 #endif // MAIN_HPP

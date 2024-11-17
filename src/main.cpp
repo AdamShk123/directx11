@@ -13,7 +13,9 @@ int main(int argc, char* argv[])
 
     auto window = Renderer::Window(CONSTANTS::TITLE.data(), CONSTANTS::SCREEN_WIDTH, CONSTANTS::SCREEN_HEIGHT);
 
-    auto game = Renderer::Renderer(window);
+    auto renderer = Renderer::Renderer(window);
+
+    auto game = Game::Game(renderer);
 
     game.run();
 
