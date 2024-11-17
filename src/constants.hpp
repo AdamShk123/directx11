@@ -8,10 +8,10 @@
 namespace CONSTANTS 
 {
 
-constexpr unsigned int SCREEN_WIDTH = 800;
-constexpr unsigned int SCREEN_HEIGHT = 600;
+constexpr auto SCREEN_WIDTH = 800u;
+constexpr auto SCREEN_HEIGHT = 600u;
 
-constexpr std::string_view TITLE = "Game";
+constexpr auto TITLE = "Game";
 
 }
 

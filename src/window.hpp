@@ -14,7 +14,7 @@ namespace Renderer
 class Window
 {
 public:
-	Window(const std::string& title, unsigned int width, unsigned int height);
+	Window(const char* title, unsigned int width, unsigned int height);
 	~Window();
 
 	HWND getHandle();

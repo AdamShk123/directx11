@@ -5,5 +5,6 @@
 #include "./window.hpp"
 #include "./renderer.hpp"
 #include "./game.hpp"
+#include "./logger.hpp"
 
 #endif // MAIN_HPP

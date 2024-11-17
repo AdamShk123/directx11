@@ -3,7 +3,7 @@
 namespace Renderer 
 {
 
-Window::Window(const std::string& title, unsigned int width, unsigned int height)
+Window::Window(const char* title, unsigned int width, unsigned int height)
 {
     const auto initResult = SDL_Init(SDL_INIT_VIDEO);
 
@@ -15,7 +15,7 @@ Window::Window(const std::string& title, unsigned int width, unsigned int height
     constexpr auto windowFlags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
 
     m_window = SDL_CreateWindow(
-        title.c_str(),
+        title,
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
         width,

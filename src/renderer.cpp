@@ -29,6 +29,8 @@ Renderer::Renderer(Window& window) : m_window(window)
     unsigned int compileFlags = 0;
     #endif
 
+    //std::cerr << "\033[31m" << "testing error" << "\033[0m" << std::endl;
+
     std::wstring vertexShaderPath{ L"./vertex.hlsl" };
 
     compileVertexShader(vertexShaderPath, compileFlags);

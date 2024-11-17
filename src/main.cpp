@@ -9,9 +9,11 @@ int main(int argc, char* argv[])
         std::println("Argument[{}]: {}", i, argv[i]);
     }
 
-    std::println("Hello World!");
+    //std::println("Hello World!");
 
-    auto window = Renderer::Window(CONSTANTS::TITLE.data(), CONSTANTS::SCREEN_WIDTH, CONSTANTS::SCREEN_HEIGHT);
+    //Logger::err("TAG", "Hello World!");
+
+    auto window = Renderer::Window(CONSTANTS::TITLE, CONSTANTS::SCREEN_WIDTH, CONSTANTS::SCREEN_HEIGHT);
 
     auto renderer = Renderer::Renderer(window);
 
