@@ -26,18 +26,30 @@
 namespace Renderer 
 {
 
+//constexpr std::array<Vertex, 6> VERTEX_BUFFER_DATA{ {
+//	{{-1.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {}},
+//	{{1.0f, -1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {}},
+//	{{0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {}},
+//	{{-1.0f, 0.5f, 1.0f}, {1.0f, 0.0f, 0.0f}, {}},
+//	{{-0.5f, 0.5f, 1.0f}, {0.0f, 1.0f, 0.0f}, {}},
+//	{{-0.75f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {}}
+//} };
+//
+//constexpr std::array<unsigned int, 6> INDEX_BUFFER_DATA{
+//	0, 1, 2,
+//	3, 4, 5
+//};
+
 constexpr std::array<Vertex, 6> VERTEX_BUFFER_DATA{ {
-	{{-1.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-	{{1.0f, -1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-	{{0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-	{{-1.0f, 0.5f, 1.0f}, {1.0f, 0.0f, 0.0f}},
-	{{-0.5f, 0.5f, 1.0f}, {0.0f, 1.0f, 0.0f}},
-	{{-0.75f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}}
+	{{-1.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+	{{-1.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
+	{{1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+	{{1.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
 } };
 
 constexpr std::array<unsigned int, 6> INDEX_BUFFER_DATA{
 	0, 1, 2,
-	3, 4, 5
+	2, 3, 0
 };
 
 typedef DirectX::SimpleMath::Matrix Matrix;
@@ -76,6 +88,7 @@ private:
 	void createDepthStencilView();
 	void createDepthStencilState();
 	void populateConstantBufferDataStruct();
+	void createTexture(const std::string& path);
 
 	Window& m_window;
 
@@ -98,6 +111,9 @@ private:
 	ID3DBlob* m_shaderBlob = nullptr;
 	ID3DBlob* m_shaderErrors = nullptr;
 	ID3D11InputLayout* m_vertexLayout = nullptr;
+	ID3D11SamplerState* m_samplerState = nullptr;
+	ID3D11Texture2D* m_texture = nullptr;
+	ID3D11ShaderResourceView* m_textureView = nullptr;
 
 	ConstantBuffer m_constantBufferData{};
 };

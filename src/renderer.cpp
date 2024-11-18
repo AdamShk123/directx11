@@ -1,5 +1,8 @@
 #include "./renderer.hpp"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 using namespace DirectX;
 
 namespace Renderer 
@@ -46,6 +49,9 @@ Renderer::Renderer(Window& window) : m_window(window)
     createRasterizerState();
 
     populateConstantBufferDataStruct();
+
+    std::string texturePath = "../assets/awesomeface.png";
+    createTexture(texturePath);
 }
 
 Renderer::~Renderer() 
@@ -68,6 +74,9 @@ Renderer::~Renderer()
     if (m_depthStencilBuffer) m_depthStencilBuffer->Release();
     if (m_depthStencilView) m_depthStencilView->Release();
     if (m_depthStencilState) m_depthStencilState->Release();
+    if (m_texture) m_texture->Release();
+    if (m_textureView) m_textureView->Release();
+    if (m_samplerState) m_samplerState->Release();
 
     #if defined(_DEBUG)
     if(m_debugController) m_debugController->Release();
@@ -118,6 +127,9 @@ void Renderer::render()
     m_deviceContext->VSSetShader(m_vertexShader, nullptr, 0);
     m_deviceContext->PSSetShader(m_pixelShader, nullptr, 0);
 
+    m_deviceContext->PSSetShaderResources(0, 1, &m_textureView);
+    m_deviceContext->PSSetSamplers(0, 1, &m_samplerState);
+
     unsigned int stride = sizeof(Vertex);
     unsigned int offset = 0;
     m_deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
@@ -128,7 +140,7 @@ void Renderer::render()
 
     m_deviceContext->DrawIndexed(static_cast<unsigned int>(INDEX_BUFFER_DATA.size()), 0, 0);
 
-    m_swapChain->Present(0, 0);
+    m_swapChain->Present(1, 0);
 }
 
 void Renderer::createFactory()
@@ -319,7 +331,8 @@ void Renderer::compileVertexShader(const std::wstring& path, unsigned int compil
     }
     catch (DX::com_exception e)
     {
-        std::println("erorr: {}", m_shaderErrors->GetBufferPointer());
+        auto error = std::string(static_cast<const char*>(m_shaderErrors->GetBufferPointer()), m_shaderErrors->GetBufferSize());
+        std::println("error: {}", error);
         throw e;
     }
 
@@ -353,7 +366,8 @@ void Renderer::compilePixelShader(const std::wstring& path, unsigned int compile
     }
     catch (DX::com_exception e)
     {
-        std::println("erorr: {}", m_shaderErrors->GetBufferPointer());
+        auto error = std::string(static_cast<const char*>(m_shaderErrors->GetBufferPointer()), m_shaderErrors->GetBufferSize());
+        std::println("error: {}", error);
         throw e;
     }
 
@@ -370,7 +384,7 @@ void Renderer::compilePixelShader(const std::wstring& path, unsigned int compile
 void Renderer::createInputLayout()
 {
     // Define the input layout
-    std::array<D3D11_INPUT_ELEMENT_DESC, 2> layout{};
+    std::array<D3D11_INPUT_ELEMENT_DESC, 3> layout{};
 
     layout[0].SemanticName = "POSITION";
     layout[0].SemanticIndex = 0;
@@ -387,6 +401,14 @@ void Renderer::createInputLayout()
     layout[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
     layout[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
     layout[1].InstanceDataStepRate = 0;
+
+    layout[2].SemanticName = "TEXTURE";
+    layout[2].SemanticIndex = 0;
+    layout[2].Format = DXGI_FORMAT_R32G32_FLOAT;
+    layout[2].InputSlot = 0;
+    layout[2].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+    layout[2].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+    layout[2].InstanceDataStepRate = 0;
 
     // Create the input layout
     auto createInputLayout = m_device->CreateInputLayout(
@@ -489,7 +511,7 @@ void Renderer::populateConstantBufferDataStruct()
     m_constantBufferData.view = SimpleMath::Matrix::CreateLookAt(
         SimpleMath::Vector3(0.0f, 0.0f, 2.0f),
         SimpleMath::Vector3(0.0f, 0.0f, 0.0f),
-        SimpleMath::Vector3(0.0f, 1.0f, 0.0f)
+        SimpleMath::Vector3(0.0f, 10.0f, 0.0f)
     );
 
     m_constantBufferData.projection = SimpleMath::Matrix::CreatePerspectiveFieldOfView(
@@ -498,6 +520,71 @@ void Renderer::populateConstantBufferDataStruct()
         0.1f,
         100.0f
     );
+}
+
+void Renderer::createTexture(const std::string& path)
+{
+    D3D11_SAMPLER_DESC samplerDesc{};
+    samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.MipLODBias = 0.0f;
+    samplerDesc.MaxAnisotropy = 1;
+    samplerDesc.BorderColor[0] = 0.0f;
+    samplerDesc.BorderColor[1] = 0.0f;
+    samplerDesc.BorderColor[2] = 0.0f;
+    samplerDesc.BorderColor[3] = 0.0f;
+    samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+    samplerDesc.MinLOD = 0;
+    samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+    auto result = m_device->CreateSamplerState(&samplerDesc, &m_samplerState);
+    DX::ThrowIfFailed(result);
+
+    int texWidth, texHeight, texNumChannels;
+    int texForceNumChannels = 4;
+    unsigned char* data = stbi_load(
+        path.c_str(),
+        &texWidth,
+        &texHeight,
+        &texNumChannels,
+        texForceNumChannels
+    );
+
+    if (data == nullptr)
+    {
+        std::cerr << "\033[31m" << "Failed to load texture" << "\033[0m" << std::endl;
+        throw std::runtime_error("failed");
+    }
+
+    // Create Texture
+    D3D11_TEXTURE2D_DESC textureDesc{};
+    textureDesc.Width = texWidth;
+    textureDesc.Height = texHeight;
+    textureDesc.MipLevels = 1;
+    textureDesc.ArraySize = 1;
+    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    textureDesc.SampleDesc.Count = 1;
+    textureDesc.Usage = D3D11_USAGE_IMMUTABLE;
+    textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+    D3D11_SUBRESOURCE_DATA textureSubresourceData{};
+    textureSubresourceData.pSysMem = data;
+    textureSubresourceData.SysMemPitch = 4 * texWidth;
+
+    result = m_device->CreateTexture2D(&textureDesc, &textureSubresourceData, &m_texture);
+    DX::ThrowIfFailed(result);
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc{};
+    viewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    viewDesc.Texture2D.MipLevels = 1;
+
+    result = m_device->CreateShaderResourceView(m_texture, &viewDesc, &m_textureView);
+    DX::ThrowIfFailed(result);
+
+    stbi_image_free(data);
 }
 
 void Renderer::createConstantBuffer()

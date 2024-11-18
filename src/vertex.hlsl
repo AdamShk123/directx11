@@ -7,21 +7,24 @@ cbuffer cb : register(b0)
 
 struct VertexInput
 {
-    float3 inPos : POSITION;
-    float3 inColor : COLOR;
+    float3 position : POSITION;
+    float3 color : COLOR;
+    float2 tex : TEXTURE;
 };
 
 struct VertexOutput
 {
     float3 color : COLOR;
     float4 position : SV_Position;
+    float2 tex : TEXCOORD;
 };
 
 VertexOutput main(VertexInput vertexInput)
 {
     VertexOutput output;
-    output.color = vertexInput.inColor;
-    output.position = mul(float4(vertexInput.inPos, 1.0), mul(model, mul(view, projection)));
+    output.color = vertexInput.color;
+    output.position = mul(float4(vertexInput.position, 1.0), mul(model, mul(view, projection)));
+    output.tex = vertexInput.tex;
     
     return output;
 }

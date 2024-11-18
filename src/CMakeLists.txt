@@ -1,4 +1,5 @@
 ﻿find_package(SDL2 CONFIG REQUIRED)
+find_package(Stb REQUIRED)
 
 if(WIN32)
 	find_package(directxtk CONFIG REQUIRED)
@@ -7,6 +8,7 @@ else()
 endif()
 
 file(COPY "vertex.hlsl" "pixel.hlsl" DESTINATION ${CMAKE_BINARY_DIR}/src)
+file(COPY "../assets/awesomeface.png" "../assets/testTexture.png" DESTINATION ${CMAKE_BINARY_DIR}/assets)
 
 add_executable (${PROJECT_NAME} "main.cpp" "renderer.cpp" "dx.cpp" "window.cpp" "game.cpp" "logger.cpp")
 
