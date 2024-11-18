@@ -8,7 +8,7 @@ else()
 endif()
 
 file(COPY "vertex.hlsl" "pixel.hlsl" DESTINATION ${CMAKE_BINARY_DIR}/src)
-file(COPY "../assets/awesomeface.png" "../assets/testTexture.png" DESTINATION ${CMAKE_BINARY_DIR}/assets)
+file(COPY "../assets/awesomeface.png" "../assets/EagleBackground.jpg" "../assets/testTexture.png" DESTINATION ${CMAKE_BINARY_DIR}/assets)
 
 add_executable (${PROJECT_NAME} "main.cpp" "renderer.cpp" "dx.cpp" "window.cpp" "game.cpp" "logger.cpp")
 

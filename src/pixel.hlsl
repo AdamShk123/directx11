@@ -5,7 +5,7 @@ struct PixelInput
 {
     float3 color : COLOR;
     float4 position : SV_Position;
-    float tex : TEXCOORD;
+    float2 tex : TEXCOORD;
 };
 
 struct PixelOutput
@@ -17,7 +17,7 @@ PixelOutput main(PixelInput pixelInput)
 {
     PixelOutput output;
     // output.attachment0 = float4(pixelInput.color, 0.0f);
-    output.attachment0 = mytexture.Sample(mysampler, pixelInput.tex);
+    output.attachment0 = mytexture.Sample(mysampler, float2(pixelInput.tex.x, -pixelInput.tex.y));
     
     return output;
 }

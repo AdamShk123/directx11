@@ -40,7 +40,7 @@ namespace Renderer
 //	3, 4, 5
 //};
 
-constexpr std::array<Vertex, 6> VERTEX_BUFFER_DATA{ {
+constexpr std::array<Vertex, 4> VERTEX_BUFFER_DATA{ {
 	{{-1.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
 	{{-1.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
 	{{1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},

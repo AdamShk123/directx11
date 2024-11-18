@@ -90,8 +90,8 @@ void Renderer::render()
     viewport.Height = static_cast<float>(CONSTANTS::SCREEN_HEIGHT);
     viewport.MinDepth = 0.0f;
     viewport.MaxDepth = 1.0f;
-    viewport.TopLeftX = 0;
-    viewport.TopLeftY = 0;
+    viewport.TopLeftX = 0.0f;
+    viewport.TopLeftY = 0.0f;
 
     // Set the position of the constant buffer in the vertex shader.
     unsigned int bufferNumber = 0;
@@ -234,7 +234,7 @@ void Renderer::createSwapChain()
     swapChainDesc.BufferCount = 1;
     swapChainDesc.BufferDesc.Width = CONSTANTS::SCREEN_WIDTH;
     swapChainDesc.BufferDesc.Height = CONSTANTS::SCREEN_HEIGHT;
-    swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // maybe DXGI_FORMAT_R8G8B8A8_UNORM_SRGB
     swapChainDesc.BufferDesc.RefreshRate.Numerator = 60;
     swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
@@ -535,8 +535,8 @@ void Renderer::createTexture(const std::string& path)
     samplerDesc.BorderColor[1] = 0.0f;
     samplerDesc.BorderColor[2] = 0.0f;
     samplerDesc.BorderColor[3] = 0.0f;
-    samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-    samplerDesc.MinLOD = 0;
+    samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    samplerDesc.MinLOD = -D3D11_FLOAT32_MAX;
     samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
     auto result = m_device->CreateSamplerState(&samplerDesc, &m_samplerState);
@@ -581,7 +581,7 @@ void Renderer::createTexture(const std::string& path)
     viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     viewDesc.Texture2D.MipLevels = 1;
 
-    result = m_device->CreateShaderResourceView(m_texture, &viewDesc, &m_textureView);
+    result = m_device->CreateShaderResourceView(m_texture, nullptr, &m_textureView);
     DX::ThrowIfFailed(result);
 
     stbi_image_free(data);
