@@ -89,6 +89,7 @@ private:
 	void createDepthStencilState();
 	void populateConstantBufferDataStruct();
 	void createTexture(const std::string& path);
+	void createBlendState();
 
 	Window& m_window;
 
@@ -114,6 +115,7 @@ private:
 	ID3D11SamplerState* m_samplerState = nullptr;
 	ID3D11Texture2D* m_texture = nullptr;
 	ID3D11ShaderResourceView* m_textureView = nullptr;
+	ID3D11BlendState* m_blendState = nullptr;
 
 	ConstantBuffer m_constantBufferData{};
 };

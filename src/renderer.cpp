@@ -52,6 +52,8 @@ Renderer::Renderer(Window& window) : m_window(window)
 
     std::string texturePath = "../assets/awesomeface.png";
     createTexture(texturePath);
+
+    createBlendState();
 }
 
 Renderer::~Renderer() 
@@ -77,6 +79,7 @@ Renderer::~Renderer()
     if (m_texture) m_texture->Release();
     if (m_textureView) m_textureView->Release();
     if (m_samplerState) m_samplerState->Release();
+    if (m_blendState) m_blendState->Release();
 
     #if defined(_DEBUG)
     if(m_debugController) m_debugController->Release();
@@ -109,6 +112,14 @@ void Renderer::render()
     m_deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_constantBuffer);
 
     m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, nullptr);
+
+    // Set the depth stencil state.
+    m_deviceContext->OMSetDepthStencilState(m_depthStencilState, 1);
+
+    float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    unsigned int sampleMask = 0xffffffff;
+
+    m_deviceContext->OMSetBlendState(m_blendState, blendFactor, sampleMask);
 
     m_deviceContext->RSSetViewports(1, &viewport);
 
@@ -500,8 +511,6 @@ void Renderer::createDepthStencilState()
         &m_depthStencilState
     );
     DX::ThrowIfFailed(createDepthStencilStateResult);
-    // Set the depth stencil state.
-    m_deviceContext->OMSetDepthStencilState(m_depthStencilState, 1);
 }
 
 void Renderer::populateConstantBufferDataStruct()
@@ -585,6 +594,35 @@ void Renderer::createTexture(const std::string& path)
     DX::ThrowIfFailed(result);
 
     stbi_image_free(data);
+}
+
+void Renderer::createBlendState()
+{
+    D3D11_BLEND_DESC blendDesc{};
+    blendDesc.AlphaToCoverageEnable = false;
+    blendDesc.IndependentBlendEnable = true;
+
+    // for original without blending
+    //blendDesc.RenderTarget[0].BlendEnable = true;
+    //blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+    //blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+    //blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;
+    //blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+    //blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+    //blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    //blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+    blendDesc.RenderTarget[0].BlendEnable = true;
+    blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+    blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+    blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+    auto result = m_device->CreateBlendState(&blendDesc, &m_blendState);
+    DX::ThrowIfFailed(result);
 }
 
 void Renderer::createConstantBuffer()
