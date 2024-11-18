@@ -234,7 +234,7 @@ void Renderer::createSwapChain()
     swapChainDesc.BufferCount = 1;
     swapChainDesc.BufferDesc.Width = CONSTANTS::SCREEN_WIDTH;
     swapChainDesc.BufferDesc.Height = CONSTANTS::SCREEN_HEIGHT;
-    swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // maybe DXGI_FORMAT_R8G8B8A8_UNORM_SRGB
+    swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
     swapChainDesc.BufferDesc.RefreshRate.Numerator = 60;
     swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
