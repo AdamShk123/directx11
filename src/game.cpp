@@ -18,6 +18,9 @@ void Game::run()
     SDL_Event e;
     bool quit = false;
 
+    //unsigned int lastTime = 0, 
+    //unsigned int currentTime = 0;
+
     while (!quit)
     {
         while (SDL_PollEvent(&e)) {
@@ -41,6 +44,9 @@ void Game::run()
         }
 
         m_renderer.render();
+
+        //currentTime = SDL_GetTicks();
+        //lastTime = SDL_GetTicks();
     }
 }
 

@@ -40,16 +40,42 @@ namespace Renderer
 //	3, 4, 5
 //};
 
-constexpr std::array<Vertex, 4> VERTEX_BUFFER_DATA{ {
+constexpr std::array<Vertex, 16> VERTEX_BUFFER_DATA{ {
+	//{{-1.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+	//{{-1.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
+	//{{1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+	//{{1.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+	//{{-2.0f, -1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+	//{{-2.0f, 1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
+	//{{0.0f, 1.0f, -1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+	//{{0.0f, -1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
 	{{-1.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
 	{{-1.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
 	{{1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
 	{{1.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+	{{-1.0f, -1.0f, -2.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+	{{-1.0f, 1.0f, -2.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
+	{{1.0f, 1.0f, -2.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+	{{1.0f, -1.0f, -2.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+	{{-1.0f, -1.0f, -2.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+	{{-1.0f, -1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
+	{{-1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+	{{-1.0f, 1.0f, -2.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+	{{1.0f, -1.0f, -2.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+	{{1.0f, -1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
+	{{1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+	{{1.0f, 1.0f, -2.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
 } };
 
-constexpr std::array<unsigned int, 6> INDEX_BUFFER_DATA{
+constexpr std::array<unsigned int, 24> INDEX_BUFFER_DATA{
 	0, 1, 2,
-	2, 3, 0
+	2, 3, 0,
+	4, 5, 6,
+	6, 7, 4,
+	8, 9, 10,
+	10, 11, 8,
+	12, 13, 14,
+	14, 15, 12
 };
 
 typedef DirectX::SimpleMath::Matrix Matrix;
@@ -88,6 +114,7 @@ private:
 	void createDepthStencilView();
 	void createDepthStencilState();
 	void populateConstantBufferDataStruct();
+	void createSamplerState();
 	void createTexture(const std::string& path);
 	void createBlendState();
 

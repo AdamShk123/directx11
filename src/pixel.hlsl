@@ -17,7 +17,7 @@ PixelOutput main(PixelInput pixelInput)
 {
     PixelOutput output;
     // output.attachment0 = float4(pixelInput.color, 0.0f);
-    output.attachment0 = mytexture.Sample(mysampler, float2(pixelInput.tex.x, -pixelInput.tex.y));
+    output.attachment0 = mytexture.Sample(mysampler, float2(pixelInput.tex.x, -pixelInput.tex.y)) * float4(pixelInput.color, 1.0f);
     
     return output;
 }

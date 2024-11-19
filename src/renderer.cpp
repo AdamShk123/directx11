@@ -50,6 +50,8 @@ Renderer::Renderer(Window& window) : m_window(window)
 
     populateConstantBufferDataStruct();
 
+    createSamplerState();
+
     std::string texturePath = "../assets/awesomeface.png";
     createTexture(texturePath);
 
@@ -88,6 +90,7 @@ Renderer::~Renderer()
 
 void Renderer::render() 
 {
+    m_constantBufferData.model = m_constantBufferData.model.CreateFromYawPitchRoll(static_cast<float>(SDL_GetTicks()) / 1000.0f, 0.0f, 0.0f);
     D3D11_VIEWPORT viewport{};
     viewport.Width = static_cast<float>(CONSTANTS::SCREEN_WIDTH);
     viewport.Height = static_cast<float>(CONSTANTS::SCREEN_HEIGHT);
@@ -111,7 +114,7 @@ void Renderer::render()
     // values.
     m_deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_constantBuffer);
 
-    m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, nullptr);
+    m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
 
     // Set the depth stencil state.
     m_deviceContext->OMSetDepthStencilState(m_depthStencilState, 1);
@@ -128,7 +131,7 @@ void Renderer::render()
     // Clear the depth buffer.
     m_deviceContext->ClearDepthStencilView(
         m_depthStencilView,
-        D3D11_CLEAR_DEPTH,
+        D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
         1.0f,
         0
     );
@@ -437,7 +440,7 @@ void Renderer::createRasterizerState()
 {
     D3D11_RASTERIZER_DESC rasterDesc{};
     rasterDesc.AntialiasedLineEnable = false;
-    rasterDesc.CullMode = D3D11_CULL_NONE;
+    rasterDesc.CullMode = D3D11_CULL_BACK;
     rasterDesc.DepthBias = 0;
     rasterDesc.DepthBiasClamp = 0.0f;
     rasterDesc.DepthClipEnable = true;
@@ -515,12 +518,12 @@ void Renderer::createDepthStencilState()
 
 void Renderer::populateConstantBufferDataStruct()
 {
-    m_constantBufferData.model = SimpleMath::Matrix().CreateTranslation(SimpleMath::Vector3(0.5f, 0.0f, 0.0f));
+    m_constantBufferData.model = SimpleMath::Matrix().CreateTranslation(SimpleMath::Vector3(0.0f, 0.0f, 0.0f));
 
     m_constantBufferData.view = SimpleMath::Matrix::CreateLookAt(
         SimpleMath::Vector3(0.0f, 0.0f, 2.0f),
         SimpleMath::Vector3(0.0f, 0.0f, 0.0f),
-        SimpleMath::Vector3(0.0f, 10.0f, 0.0f)
+        SimpleMath::Vector3(0.0f, 100.0f, 0.0f)
     );
 
     m_constantBufferData.projection = SimpleMath::Matrix::CreatePerspectiveFieldOfView(
@@ -531,7 +534,7 @@ void Renderer::populateConstantBufferDataStruct()
     );
 }
 
-void Renderer::createTexture(const std::string& path)
+void Renderer::createSamplerState()
 {
     D3D11_SAMPLER_DESC samplerDesc{};
     samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -550,7 +553,10 @@ void Renderer::createTexture(const std::string& path)
 
     auto result = m_device->CreateSamplerState(&samplerDesc, &m_samplerState);
     DX::ThrowIfFailed(result);
+}
 
+void Renderer::createTexture(const std::string& path)
+{
     int texWidth, texHeight, texNumChannels;
     int texForceNumChannels = 4;
     unsigned char* data = stbi_load(
@@ -582,7 +588,7 @@ void Renderer::createTexture(const std::string& path)
     textureSubresourceData.pSysMem = data;
     textureSubresourceData.SysMemPitch = 4 * texWidth;
 
-    result = m_device->CreateTexture2D(&textureDesc, &textureSubresourceData, &m_texture);
+    auto result = m_device->CreateTexture2D(&textureDesc, &textureSubresourceData, &m_texture);
     DX::ThrowIfFailed(result);
 
     D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc{};
@@ -592,6 +598,8 @@ void Renderer::createTexture(const std::string& path)
 
     result = m_device->CreateShaderResourceView(m_texture, nullptr, &m_textureView);
     DX::ThrowIfFailed(result);
+
+    m_deviceContext->GenerateMips(m_textureView);
 
     stbi_image_free(data);
 }
@@ -616,7 +624,7 @@ void Renderer::createBlendState()
     blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
     blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
     blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-    blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+    blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
     blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
     blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
     blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;

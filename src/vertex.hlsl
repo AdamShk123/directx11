@@ -23,7 +23,7 @@ VertexOutput main(VertexInput vertexInput)
 {
     VertexOutput output;
     output.color = vertexInput.color;
-    output.position = mul(float4(vertexInput.position, 1.0), mul(model, mul(view, projection)));
+    output.position = mul(float4(vertexInput.position.x, vertexInput.position.y, vertexInput.position.z, 1.0), mul(model, mul(view, projection)));
     output.tex = vertexInput.tex;
     
     return output;
