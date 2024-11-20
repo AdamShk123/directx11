@@ -2,6 +2,7 @@
 #define GAME_HPP
 
 #include "./renderer.hpp"
+#include "./input.hpp"
 
 namespace Game 
 {
@@ -15,6 +16,7 @@ public:
 	void run();
 private:
 	Renderer::Renderer& m_renderer;
+	Input m_input;
 };
 
 }

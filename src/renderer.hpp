@@ -63,7 +63,7 @@ constexpr std::array<Vertex, 16> VERTEX_BUFFER_DATA{ {
 	{{-1.0f, 1.0f, -2.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
 	{{1.0f, -1.0f, -2.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
 	{{1.0f, -1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
-	{{1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+	{{1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f} },
 	{{1.0f, 1.0f, -2.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
 } };
 
@@ -96,7 +96,10 @@ public:
 	Renderer(Window& window);
 	~Renderer();
 
-	void render();
+	void render(float delta);
+
+	void setCameraPosition(const Vector3& newPosition);
+	void setCameraDirection(const Vector3& newPosition);
 private:
 	void createFactory();
 	IDXGIAdapter* findBestAdapter() noexcept;
@@ -145,6 +148,9 @@ private:
 	ID3D11BlendState* m_blendState = nullptr;
 
 	ConstantBuffer m_constantBufferData{};
+
+	Vector3 m_cameraPosition{ 0.0f, 0.0f, 2.0f };
+	Vector3 m_cameraDirection{ 0.0f, 0.0f, 0.0f };
 };
 
 }

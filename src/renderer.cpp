@@ -52,7 +52,7 @@ Renderer::Renderer(Window& window) : m_window(window)
 
     createSamplerState();
 
-    std::string texturePath = "../assets/awesomeface.png";
+    std::string texturePath = "../assets/container.jpg";
     createTexture(texturePath);
 
     createBlendState();
@@ -88,9 +88,15 @@ Renderer::~Renderer()
     #endif
 }
 
-void Renderer::render() 
+void Renderer::render(float delta) 
 {
-    m_constantBufferData.model = m_constantBufferData.model.CreateFromYawPitchRoll(static_cast<float>(SDL_GetTicks()) / 1000.0f, 0.0f, 0.0f);
+    std::println("delta: {}s", delta);
+    m_constantBufferData.view = SimpleMath::Matrix::CreateLookAt(
+        m_cameraPosition,
+        m_cameraDirection,
+        SimpleMath::Vector3(0.0f, 100.0f, 0.0f)
+    );
+    //m_constantBufferData.model = m_constantBufferData.model.CreateFromAxisAngle(Vector3(1.0f, 0.0f, 0.0f), static_cast<float>(SDL_GetTicks()) / 1000.0f);
     D3D11_VIEWPORT viewport{};
     viewport.Width = static_cast<float>(CONSTANTS::SCREEN_WIDTH);
     viewport.Height = static_cast<float>(CONSTANTS::SCREEN_HEIGHT);
@@ -155,6 +161,16 @@ void Renderer::render()
     m_deviceContext->DrawIndexed(static_cast<unsigned int>(INDEX_BUFFER_DATA.size()), 0, 0);
 
     m_swapChain->Present(1, 0);
+}
+
+void Renderer::setCameraPosition(const Vector3& newPosition)
+{
+    m_cameraPosition = newPosition;
+}
+
+void Renderer::setCameraDirection(const Vector3& newDirection)
+{
+    m_cameraDirection = newDirection;
 }
 
 void Renderer::createFactory()
@@ -440,7 +456,7 @@ void Renderer::createRasterizerState()
 {
     D3D11_RASTERIZER_DESC rasterDesc{};
     rasterDesc.AntialiasedLineEnable = false;
-    rasterDesc.CullMode = D3D11_CULL_BACK;
+    rasterDesc.CullMode = D3D11_CULL_NONE;
     rasterDesc.DepthBias = 0;
     rasterDesc.DepthBiasClamp = 0.0f;
     rasterDesc.DepthClipEnable = true;
@@ -622,9 +638,9 @@ void Renderer::createBlendState()
 
     blendDesc.RenderTarget[0].BlendEnable = true;
     blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
     blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-    blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+    blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
     blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
     blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
     blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
