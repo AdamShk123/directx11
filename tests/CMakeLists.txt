@@ -2,7 +2,7 @@
 
 find_package(GTest CONFIG REQUIRED)
 
-add_executable (unitTests "test.cpp")
+add_executable (unitTests "test.cpp" "test_input.cpp")
 
 target_link_libraries(unitTests PRIVATE GTest::gtest GTest::gtest_main)
 

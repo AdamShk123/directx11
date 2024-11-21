@@ -9,15 +9,13 @@ int main(int argc, char* argv[])
         std::println("Argument[{}]: {}", i, argv[i]);
     }
 
-    //std::println("Hello World!");
-
-    //Logger::err("TAG", "Hello World!");
+    auto input = Game::Input();
 
     auto window = Renderer::Window(CONSTANTS::TITLE, CONSTANTS::SCREEN_WIDTH, CONSTANTS::SCREEN_HEIGHT);
 
     auto renderer = Renderer::Renderer(window);
 
-    auto game = Game::Game(renderer);
+    auto game = Game::Game(renderer, input);
 
     game.run();
 

@@ -3,7 +3,7 @@
 namespace Game 
 {
 
-Game::Game(Renderer::Renderer& renderer) : m_renderer(renderer), m_input()
+Game::Game(Renderer::Renderer& renderer, IInput& input) : m_renderer(renderer), m_input(input)
 {
 
 }
@@ -25,62 +25,13 @@ void Game::run()
 
     while (!quit)
     {
-        //while (SDL_PollEvent(&e)) {
-        //    if (e.type == SDL_QUIT) {
-        //        quit = true;
-        //    }
-        //    switch (e.type)
-        //    {
-        //    case SDL_QUIT:
-        //        quit = true;
-        //        break;
-        //    case SDL_KEYDOWN:
-        //        switch (e.key.keysym.sym)
-        //        {
-        //        case SDLK_ESCAPE:
-        //            quit = true;
-        //            break;
-        //        case SDLK_w:
-        //            cameraPosition.z -= 0.1f;
-        //            m_renderer.setCameraPosition(cameraPosition);
-        //            break;
-        //        case SDLK_s:
-        //            cameraPosition.z += 0.1f;
-        //            m_renderer.setCameraPosition(cameraPosition);
-        //            break;
-        //        case SDLK_d:
-        //            cameraPosition.x += 0.1f;
-        //            m_renderer.setCameraPosition(cameraPosition);
-        //            break;
-        //        case SDLK_a:
-        //            cameraPosition.x -= 0.1f;
-        //            m_renderer.setCameraPosition(cameraPosition);
-        //            break;
-        //        case SDLK_UP:
-        //            cameraDirection.y += 0.1f;
-        //            m_renderer.setCameraDirection(cameraDirection);
-        //            break;
-        //        case SDLK_DOWN:
-        //            cameraDirection.y -= 0.1f;
-        //            m_renderer.setCameraDirection(cameraDirection);
-        //            break;
-        //        case SDLK_LEFT:
-        //            cameraDirection.x -= 0.1f;
-        //            m_renderer.setCameraDirection(cameraDirection);
-        //            break;
-        //        case SDLK_RIGHT:
-        //            cameraDirection.x += 0.1f;
-        //            m_renderer.setCameraDirection(cameraDirection);
-        //            break;
-        //        }
-        //        break;
-        //    }
-        //}
-
         m_input.update();
 
         if (m_input.getKeyPressed(KEY_ESC))
             quit = true;
+
+        auto mousePosition = m_input.getMousePosition();
+        std::println("(x:{}, y:{})", mousePosition.x, mousePosition.y);
 
         currentTime = static_cast<unsigned int>(SDL_GetTicks());
 

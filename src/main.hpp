@@ -6,5 +6,6 @@
 #include "./renderer.hpp"
 #include "./game.hpp"
 #include "./logger.hpp"
+#include "./input.hpp"
 
 #endif // MAIN_HPP

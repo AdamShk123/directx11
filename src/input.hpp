@@ -6,29 +6,20 @@
 
 #include <SDL2/SDL.h>
 
+#include "./interface_input.hpp"
+
 namespace Game 
 {
 
-enum Key : unsigned int
-{
-	KEY_ESC,
-	KEY_W,
-	KEY_S,
-	KEY_A,
-	KEY_D
-};
-
-class Input 
+class Input : public IInput
 {
 public:
 	Input();
 	~Input();
 
-	void update();
-	bool getKeyPressed(Key key);
+	void update() override;
 private:
 	SDL_Event m_event;
-	std::unordered_map<Key, bool> m_keyStates;
 };
 
 }

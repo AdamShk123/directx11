@@ -3,7 +3,7 @@
 namespace Game 
 {
 
-Input::Input() : m_keyStates()
+Input::Input() : m_event()
 {
 
 }
@@ -14,9 +14,9 @@ Input::~Input()
 
 void Input::update()
 {
-    for (const auto& state : m_keyStates) 
+    for (int i = 0; i < KEY_D; i++) 
     {
-        m_keyStates[state.first] = false;
+        setKeyPressed(static_cast<Key>(i), false);
     }
 
     while (SDL_PollEvent(&m_event)) {
@@ -28,17 +28,27 @@ void Input::update()
             switch (m_event.key.keysym.sym)
             {
             case SDLK_ESCAPE:
-                m_keyStates[KEY_ESC] = true;
+                setKeyPressed(KEY_ESC, true);
+                break;
+            case SDLK_w:
+                setKeyPressed(KEY_W, true);
+                break;
+            case SDLK_s:
+                setKeyPressed(KEY_S, true);
+                break;
+            case SDLK_a:
+                setKeyPressed(KEY_A, true);
+                break;
+            case SDLK_d:
+                setKeyPressed(KEY_D, true);
                 break;
             }
             break;
+        case SDL_MOUSEMOTION:
+            setMousePosition(MousePosition(m_event.motion.x, m_event.motion.y));
+            break;
         }
     }
-}
-
-bool Input::getKeyPressed(Key key)
-{
-    return m_keyStates[key];
 }
 
 }

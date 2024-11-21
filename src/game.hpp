@@ -10,13 +10,13 @@ namespace Game
 class Game 
 {
 public:
-	Game(Renderer::Renderer& renderer);
+	Game(Renderer::Renderer& renderer, IInput& input);
 	~Game();
 
 	void run();
 private:
 	Renderer::Renderer& m_renderer;
-	Input m_input;
+	IInput& m_input;
 };
 
 }
